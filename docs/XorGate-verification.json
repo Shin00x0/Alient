@@ -1,0 +1,12 @@
+{
+  "engineVersion": "12.1.3",
+  "language": "x86:LE:64:default",
+  "comparedFunctions": 16,
+  "externalEntries": 11,
+  "mismatches": [],
+  "passed": true,
+  "binarySHA256": "fba3829b3f141e5ecaca2197871380bb571cb72c805a7eaea0c8d22580ed7120",
+  "resultSHA256": "440b83a8c6dddd64855030b8795fb1a6b5ae9dbf0dc16c60c98c47c6738e7b3f",
+  "binaryName": "XorGate",
+  "method": "Independent headless re-import and DecompInterface with default options plus program compiler specification. Compares pseudocode and exported instructions; not a desktop UI comparison."
+}
