@@ -6,3 +6,4 @@ data/
 
 example/
 ghidra-original/
+engine-rust/target/

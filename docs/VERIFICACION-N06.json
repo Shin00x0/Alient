@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-15",
+  "module": "N06",
+  "projects": [
+    {
+      "id": "7a616d34-f4e4-4eb7-b653-022f6ae0b729",
+      "name": "Rust · sample-macho",
+      "build": "ddcbdd45099776fc",
+      "instructions": 31,
+      "functions": 3,
+      "unknownInstructions": 0,
+      "inspectedFunction": "100003f2c",
+      "irOperations": 22,
+      "memoryReads": 6,
+      "memoryWrites": 9,
+      "generation": "listing-ea56ae59-cc31-907b-866e-351768d5034b",
+      "revision": 5
+    },
+    {
+      "id": "500c1bad-0802-420a-8f0d-552f226f6df4",
+      "name": "Rust · listing-large",
+      "build": "ddcbdd45099776fc",
+      "instructions": 1431,
+      "functions": 231,
+      "unknownInstructions": 0,
+      "inspectedFunction": "10000295c",
+      "irOperations": 1201,
+      "memoryReads": 0,
+      "memoryWrites": 0,
+      "generation": "listing-294f9759-e0a8-4422-9d72-1a6c0011ea24",
+      "revision": 3
+    },
+    {
+      "id": "5e4ab376-0011-4227-b08f-def56a3147d3",
+      "name": "Rust · XorGate",
+      "build": "ddcbdd45099776fc",
+      "instructions": 210,
+      "functions": 15,
+      "unknownInstructions": 0,
+      "inspectedFunction": "000011e9",
+      "irOperations": 148,
+      "memoryReads": 50,
+      "memoryWrites": 35,
+      "generation": "listing-d46c3768-0282-36d2-11dd-4510d4b8fa64",
+      "revision": 4
+    }
+  ],
+  "limits": "Validación de contrato y efectos conservadores. No demuestra semántica exhaustiva de instrucciones ni equivalencia con ejecución nativa."
+}

@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-15",
+  "module": "N05",
+  "projects": [
+    {
+      "id": "7a616d34-f4e4-4eb7-b653-022f6ae0b729",
+      "name": "Rust · sample-macho",
+      "build": "c682beb56f743e4e",
+      "instructions": 31,
+      "functions": 3,
+      "origins": {
+        "symbol": 2,
+        "call-target": 1
+      },
+      "thunks": 0,
+      "sharedFunctions": 0,
+      "transfers": 0,
+      "unknownInstructions": 0,
+      "generation": "listing-79c37e32-384f-9d9d-d593-858d8abb59f3",
+      "revision": 4
+    },
+    {
+      "id": "500c1bad-0802-420a-8f0d-552f226f6df4",
+      "name": "Rust · listing-large",
+      "build": "c682beb56f743e4e",
+      "instructions": 1431,
+      "functions": 231,
+      "origins": {
+        "symbol": 231
+      },
+      "thunks": 0,
+      "sharedFunctions": 0,
+      "transfers": 0,
+      "unknownInstructions": 0,
+      "generation": "listing-45839d36-149d-a0b2-e163-bd85eb90a3a5",
+      "revision": 2
+    },
+    {
+      "id": "5e4ab376-0011-4227-b08f-def56a3147d3",
+      "name": "Rust · XorGate",
+      "build": "c682beb56f743e4e",
+      "instructions": 210,
+      "functions": 15,
+      "origins": {
+        "symbol": 8,
+        "call-target": 7
+      },
+      "thunks": 1,
+      "sharedFunctions": 0,
+      "transfers": 1,
+      "unknownInstructions": 0,
+      "generation": "listing-9f630ef3-c268-954a-6ed4-5e3b104442aa",
+      "revision": 3
+    }
+  ],
+  "limits": "Mediciones de regresión; no demuestran recuperación exhaustiva ni paridad con Ghidra/IDA."
+}

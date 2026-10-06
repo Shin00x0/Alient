@@ -1,1 +1,21 @@
-{"name":"ghidra-web","version":"0.1.0","private":true,"type":"module","scripts":{"build":"tsc -p tsconfig.json","start":"node --experimental-strip-types backend/server.ts","test":"node --experimental-strip-types --test tests/*.test.ts"},"devDependencies":{"typescript":"~5.9.3","@types/node":"^24.0.0"}}
+{
+  "name": "ghidra-web",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node --experimental-strip-types backend/server.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "engine:build": "node scripts/build-engine.mjs",
+    "engine:test": "node scripts/build-engine.mjs --test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/three": "^0.186.0",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  }
+}

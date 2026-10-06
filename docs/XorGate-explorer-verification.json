@@ -1,0 +1,29 @@
+{
+  "project": "XorGate",
+  "schemaVersion": 4,
+  "persistent": true,
+  "stringAddress": "00102008",
+  "xrefs": [
+    {
+      "from": "0010120e",
+      "to": "00102008",
+      "type": "DATA",
+      "call": false,
+      "function": "main",
+      "functionAddress": "001011e9"
+    },
+    {
+      "from": "00101215",
+      "to": "00102008",
+      "type": "PARAM",
+      "call": false,
+      "function": "main",
+      "functionAddress": "001011e9"
+    }
+  ],
+  "strings": 88,
+  "references": 240,
+  "symbols": 120,
+  "flowBlocks": 46,
+  "passed": true
+}

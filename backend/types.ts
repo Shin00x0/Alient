@@ -1,5 +1,10 @@
 export interface CrossReference {from:string;to:string;type:string;call:boolean;function?:string;functionAddress?:string}
+export type EngineId = 'ghidra' | 'internal';
 export interface Analysis {
+    program?: {id:string;revision:number;schemaVersion:1|2};
+    engine?: EngineId;
+    listingGeneration?: string;
+    totalInstructions?: number;
     allReferences?: CrossReference[];
     referencesTruncated?: boolean;
     symbols?: {name:string;address:string;type:string;external:boolean;entry:boolean}[];
@@ -32,12 +37,14 @@ export interface Analysis {
     functions: FunctionInfo[];
 }
 export interface FunctionInfo {
+    discovery?: {source:string;declared_end?:string|null;thunk_target?:string|null;shared_code:string[];transfers:{from:string;to:string;kind:string}[]};
+    id?:string;revision?:number;
     end?:string;
     comment?:string;
     flowBlocks?: {address:string;end:string;edges:{to:string;type:string}[]}[];
     variables?: {id:string;name:string;type:string;storage:string;parameter:boolean}[];
     kind?: 'external' | 'thunk' | 'function';
-    decompileStatus?: 'external' | 'no-instructions' | 'failed' | 'complete';
+    decompileStatus?: 'external' | 'no-instructions' | 'failed' | 'complete' | 'partial';
     warning?: string;
     decompiledSignature?: string;
     codeLines?: {indent: string; tokens: {text: string; syntax: number; address?: string}[]}[];
@@ -59,6 +66,7 @@ export interface FunctionInfo {
     }[];
 }
 export interface Project {
+    engine?: EngineId;
     persistent?: boolean;
     id: string;
     name: string;
@@ -72,4 +80,19 @@ export interface Project {
         label: string;
         comment: string;
     }>;
+}
+
+export interface ListingInstruction {
+    id?:string;revision?:number;
+    address:string;offset:string;endOffset:string;space:string;text:string;bytes:string;
+    comment?:string;function?:string;functionAddress?:string;label?:string;
+    references:{to:string;type:string}[];
+}
+export interface ListingManifest {
+    generation:string;totalInstructions:number;pageSize:number;defaultSpace:string;
+    pages:{page:number;space:string;start:string;end:string;count:number}[];
+}
+export interface ListingPage {
+    generation:string;page:number;totalPages:number;totalInstructions:number;
+    rows:ListingInstruction[];selected?:string;exact:boolean;requested?:string;
 }

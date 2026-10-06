@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-15",
+  "runtime": "release; local macOS ARM64; includes API/polling overhead",
+  "results": [
+    {
+      "name": "Rust · sample-macho",
+      "id": "7a616d34-f4e4-4eb7-b653-022f6ae0b729",
+      "format": "Mach-O 64-bit",
+      "architecture": "AARCH64:LE:64",
+      "instructions": 31,
+      "functions": 3,
+      "strings": 1,
+      "references": 4,
+      "unknownInstructions": 0,
+      "elapsedMs": 973,
+      "engine": "rust",
+      "persistent": true
+    },
+    {
+      "name": "Rust · listing-large",
+      "id": "500c1bad-0802-420a-8f0d-552f226f6df4",
+      "format": "Mach-O 64-bit",
+      "architecture": "AARCH64:LE:64",
+      "instructions": 1431,
+      "functions": 231,
+      "strings": 0,
+      "references": 0,
+      "unknownInstructions": 0,
+      "elapsedMs": 2707,
+      "engine": "rust",
+      "persistent": true
+    },
+    {
+      "name": "Rust · XorGate",
+      "id": "5e4ab376-0011-4227-b08f-def56a3147d3",
+      "format": "ELF 64-bit",
+      "architecture": "x86:LE:64",
+      "instructions": 210,
+      "functions": 15,
+      "strings": 26,
+      "references": 61,
+      "unknownInstructions": 8,
+      "elapsedMs": 948,
+      "engine": "rust",
+      "persistent": true
+    }
+  ]
+}

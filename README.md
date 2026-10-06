@@ -1,14 +1,18 @@
-# Ghidra Web — versión mínima 0.1
+# Ghidra Web — versión 0.2
 
-Aplicación web de análisis estático inspirada en Ghidra. Interfaz y servidor HTTP en TypeScript, sin framework, sin dependencias de producción. Utiliza el motor real de Ghidra mediante un script Java ejecutado en modo headless. No ejecuta el binario importado. No incluye debugger.
+> **Actualización 2026-09-15:** migración activa del motor interno a Rust. Consulta el [registro de avance y pendientes](docs/AVANCE-MOTOR-RUST.md); las secciones históricas del motor TypeScript aún no describen el nuevo runtime.
+
+
+Aplicación web de análisis estático inspirada en Ghidra. Interfaz y servidor HTTP en TypeScript, sin framework, sin dependencias npm de producción. Permite elegir en Configuración entre el motor interno Rust (ARM64/x86-64) y el motor real de Ghidra mediante scripts Java headless. No ejecuta el binario importado. No incluye debugger.
 
 ## Iniciar
 
-Requiere Node.js 24, npm, una distribución **ejecutable** de Ghidra y un JDK compatible. El código fuente clonado por sí solo no es una instalación ejecutable.
+El motor interno requiere Node.js 24, npm y Rust estable con compilador C para Capstone. Solo la opción Ghidra requiere además una distribución **ejecutable** de Ghidra y un JDK compatible. El código fuente clonado por sí solo no es una instalación ejecutable.
 
 ```sh
 cd /Users/matiasaltamirano/Documents/ChatGPT/CloneGhidraWeb/ghidra-web
 npm ci
+npm run engine:build
 npm run build
 npm start
 ```
@@ -55,7 +59,7 @@ Navegador: HTML + CSS + TypeScript
   → data/<uuid>: binario, resultados y anotaciones persistentes
 ```
 
-El proyecto temporal de Ghidra se elimina al terminar; se conserva la instantánea JSON y el archivo original. No se conserva una sesión interactiva del motor. El clon está en una primera etapa de exploración de resultados, no tiene paridad funcional con Ghidra de escritorio.
+El proyecto Ghidra se conserva en `data/<uuid>/analysis.gpr` y `analysis.rep/`. Las ediciones y regeneraciones reabren ese programa. La JVM se inicia por trabajo; no existe todavía un servicio residente. Los proyectos antiguos deben regenerarse una vez. No hay paridad completa con Ghidra de escritorio.
 
 - `frontend/`: interfaz sin framework. El contenido procedente del binario se inserta como texto, nunca como HTML.
 - `backend/`: API, persistencia, cola y proceso del motor.
@@ -66,7 +70,7 @@ El proyecto temporal de Ghidra se elimina al terminar; se conserva la instantán
 
 ## Límites y alcance
 
-Exportación limitada a 200 funciones, 500 instrucciones por función, 200 referencias por función y 2000 cadenas definidas por Ghidra. No es una vista completa de binarios grandes. Decompilación limitada a 30 segundos por función; análisis automático a 5 minutos; proceso completo a 10 minutos. Ghidra dispone de hasta 2 GiB de heap Java y dos CPU de análisis; el consumo del proceso nativo no queda limitado por ese heap.
+El listing principal incluye todas las instrucciones definidas por Ghidra y todas las funciones del listado, paginadas desde disco. La exportación auxiliar de pseudocódigo, grafos y búsquedas de texto sigue limitada a 200 funciones, 500 instrucciones por función, 200 referencias por función y 2000 cadenas definidas por Ghidra. Decompilación limitada a 30 segundos por función; análisis automático a 5 minutos; proceso completo a 10 minutos. Ghidra dispone de hasta 2 GiB de heap Java y dos CPU de análisis; el consumo del proceso nativo no queda limitado por ese heap.
 
 Las direcciones se transportan como texto hexadecimal para evitar pérdida de precisión de 64 bits. El visor hexadecimal muestra offsets del archivo, no direcciones virtuales. Las referencias saltan a funciones solamente cuando la instrucción de origen está incluida en la exportación.
 
@@ -106,3 +110,41 @@ node scripts/verify-project.mjs <uuid-del-proyecto>
 ```
 
 El script reimporta el mismo binario en otro proyecto Ghidra, sin invocar el adaptador ExportWeb, y compara pseudocódigo e instrucciones exportadas. Conserva el informe y registro en `data/<uuid>/verification/`. No ejecuta el binario. Requiere el mismo runtime local y acceso a Java. La prueba de `XorGate` está en `docs/XorGate-verification.json`: 16 funciones iguales y 11 entradas externas sin implementación. No es una comparación automatizada con la interfaz de escritorio ni sus preferencias personalizadas.
+
+## Nuevos flujos de trabajo (0.2)
+
+- Cadenas: usa el filtro de la vista y pulsa el contador XREF para ver quién utiliza cada cadena, incluyendo referencias a su interior. Pulsa una dirección para navegar.
+- Navegación: introduce una dirección hexadecimal o nombre exacto de función. Atajos G (ir), X (referencias), Alt+izquierda/derecha (historial).
+- Las pestañas incluyen símbolos, importaciones/exportaciones, búsqueda de ensamblador/C/bytes, flujo, llamadas, variables, tipos y marcadores. El filtro acota la pestaña activa; las tablas muestran hasta 300 resultados.
+- Editar programa: aplica nombres, comentarios, firmas C, cambios de variable o marcadores en Ghidra. Para firmas/variables usa la entrada de la función. Para tipos de variable utiliza una ruta existente del panel Tipos.
+- Las anotaciones web siguen siendo independientes. Para cambiar el pseudocódigo usa Editar programa.
+- Las búsquedas de texto cubren los datos exportados, con los límites detallados en ESTADO.md. La búsqueda de bytes cubre el archivo original.
+- No expongas este servidor local directamente a Internet.
+
+## Recorrer el listing completo
+
+El panel Listing tiene controles para primera/anterior/siguiente/última página y un campo de número de página. Cada página contiene hasta 256 instrucciones. Haz clic en una fila para seleccionarla; usa flechas o Page Up/Page Down para desplazarte. La barra Ir acepta direcciones hexadecimales (también espacio:dirección) y nombres del índice completo de funciones.
+
+El contenido sale de Ghidra, incluyendo instrucciones fuera de funciones y posteriores al límite de la exportación C. Los saltos y referencias de cada instrucción son enlaces. Las direcciones sin instrucciones muestran la más cercana con un aviso. No se realiza desensamblado nuevo por navegar. Regenera los proyectos antiguos para activar el índice.
+
+### Pseudocódigo desde el listing
+
+Seleccionar una función que no esté entre las primeras 200 solicita su decompilación a Ghidra sobre el proyecto persistente, en modo de solo lectura y sin repetir el análisis. Se conserva el resultado por revisión; editar o regenerar crea una revisión nueva. Si el motor está ocupado, el panel permite reintentar. El primer acceso puede tardar por el arranque de Java. La búsqueda de pseudocódigo abarca las funciones cargadas, no todo el programa automáticamente.
+
+### Motor interno Rust
+
+En **Configuración · Motor** elige **Motor Rust (ARM64 / x86-64)** o **Conectar con Ghidra**. Cada proyecto conserva su motor. Para comparar importa el mismo binario con ambas opciones.
+
+`engine-rust/` es un ejecutable independiente. Carga ELF64, Mach-O64 y PE32+ enlazados mediante `object`, decodifica con Capstone y utiliza IR, análisis y decompilador propios. No invoca Ghidra, Java ni ejecuta el binario analizado. El código TypeScript antiguo se conserva como referencia y para sus pruebas; el servidor ya no lo usa como motor.
+
+Incluye descubrimiento de funciones/CFG, SSA, constantes, ABI, tipos, resolución indirecta acotada, C parcial, persistencia, búsqueda indexada, comandos y undo/redo. **No tiene paridad con Ghidra/IDA**: faltan semánticas SIMD/FP, tipado avanzado, prototipos complejos, tablas relativas y reconstrucción general de C, entre otros límites.
+
+- Compilar: `npm run engine:build`. Probar Rust: `npm run engine:test`.
+- `NATIVE_ENGINE=/ruta/al/ghidra-web-engine` permite seleccionar un ejecutable. Sin esa variable se prefiere release y luego debug; reinicia el servidor después de cambiarlo.
+- El panel **Editar programa** expone operaciones y undo/redo; tipos y tablas reciben JSON estructurado con ejemplos en el formulario.
+- **Buscar C** usa el índice global nativo por palabras completas y páginas de 100 resultados. Otros filtros de tablas mantienen su alcance mostrado.
+- Los proyectos internos anteriores se regeneran con schema 2. Las anotaciones web se conservan; las identidades del antiguo modelo TS no son equivalentes a las nativas.
+- API: `/api/projects/:id/program`, `/native-search?q=...`, `/native-function?address=...` y `/native-indirect`.
+- Cambiar el motor de nuevos proyectos no convierte los existentes.
+
+Detalle de módulos, límites y evidencias: [registro de avance](docs/AVANCE-MOTOR-RUST.md) y [documentación del motor Rust](engine-rust/README.md).

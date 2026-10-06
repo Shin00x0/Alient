@@ -1,0 +1,61 @@
+{
+  "date": "2026-09-18",
+  "module": "N07",
+  "projects": [
+    {
+      "id": "7a616d34-f4e4-4eb7-b653-022f6ae0b729",
+      "name": "Rust · sample-macho",
+      "build": "a7fe1058006cfc81",
+      "instructions": 31,
+      "functions": 3,
+      "unknownInstructions": 0,
+      "inspectedFunction": "100003f2c",
+      "irOperations": 22,
+      "phis": 0,
+      "dominatorBlocks": 3,
+      "liveBlocks": 3,
+      "statementStateInstructions": 20,
+      "memoryReads": 6,
+      "memoryWrites": 9,
+      "generation": "listing-e0965ff1-bfc5-6214-8d2f-3aba9879c3e5",
+      "revision": 7
+    },
+    {
+      "id": "500c1bad-0802-420a-8f0d-552f226f6df4",
+      "name": "Rust · listing-large",
+      "build": "a7fe1058006cfc81",
+      "instructions": 1431,
+      "functions": 231,
+      "unknownInstructions": 0,
+      "inspectedFunction": "10000295c",
+      "irOperations": 1201,
+      "phis": 0,
+      "dominatorBlocks": 1,
+      "liveBlocks": 1,
+      "statementStateInstructions": 1201,
+      "memoryReads": 0,
+      "memoryWrites": 0,
+      "generation": "listing-52531c33-8a10-9e85-6949-a1307aa3fe14",
+      "revision": 5
+    },
+    {
+      "id": "5e4ab376-0011-4227-b08f-def56a3147d3",
+      "name": "Rust · XorGate",
+      "build": "a7fe1058006cfc81",
+      "instructions": 210,
+      "functions": 15,
+      "unknownInstructions": 0,
+      "inspectedFunction": "000011e9",
+      "irOperations": 148,
+      "phis": 39,
+      "dominatorBlocks": 30,
+      "liveBlocks": 30,
+      "statementStateInstructions": 132,
+      "memoryReads": 50,
+      "memoryWrites": 35,
+      "generation": "listing-66af66fa-92b8-9afe-f553-8ffd97038c6a",
+      "revision": 6
+    }
+  ],
+  "limits": "Análisis conservador de flujo de datos; no demuestra SSA de memoria precisa ni optimización exhaustiva."
+}

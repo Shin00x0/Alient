@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-15",
+  "module": "N04",
+  "project": "5e4ab376-0011-4227-b08f-def56a3147d3",
+  "name": "Rust · XorGate",
+  "engine": "rust",
+  "build": "968fa708cbe11e84",
+  "sourceHash": "fba3829b3f141e5ecaca2197871380bb571cb72c805a7eaea0c8d22580ed7120",
+  "instructions": 210,
+  "functions": 15,
+  "unknownInstructions": [],
+  "tlsInstructions": [
+    {
+      "address": "1492",
+      "text": "sub rdx, qword ptr fs:[0x28]"
+    },
+    {
+      "address": "11f8",
+      "text": "mov rax, qword ptr fs:[0x28]"
+    }
+  ],
+  "stopInstructions": [
+    {
+      "address": "1125",
+      "text": "hlt"
+    }
+  ],
+  "generation": "listing-ebe56d96-f4ea-b743-b656-297bf1c5526d",
+  "revision": 2,
+  "limits": "TLS usa bases simbólicas desconocidas. Las paradas no modelan contexto, manejadores ni reanudación. El C sigue siendo parcial."
+}

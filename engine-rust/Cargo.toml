@@ -1,0 +1,32 @@
+[package]
+name = "ghidra-web-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.98"
+publish = false
+
+[lib]
+name = "ghidra_web_engine"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ghidra-web-engine"
+path = "src/main.rs"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+object = { version = "0.36", features = ["read", "compression"] }
+capstone = "0.12"
+fs2 = "0.4"
+
+[profile.dev]
+debug = 0
+incremental = false

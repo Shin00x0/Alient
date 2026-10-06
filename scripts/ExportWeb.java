@@ -43,10 +43,13 @@ public class ExportWeb extends GhidraScript {
         if (!decompiler.openProgram(currentProgram)) throw new Exception("Cannot initialize decompiler");
         int count = 0;
         try {
+            String target = getScriptArgs().length > 1 ? getScriptArgs()[1] : null;
             FunctionIterator it = currentProgram.getFunctionManager().getFunctions(true);
-            while (it.hasNext() && count < 200) {
+            while (it.hasNext() && (target != null || count < 200)) {
                 monitor.checkCancelled();
-                Function f = it.next(); count++;
+                Function f = it.next();
+                if (target != null && !f.getEntryPoint().toString().equals(target)) continue;
+                count++;
                 JsonObject o = new JsonObject();
                 o.addProperty("address", f.getEntryPoint().toString()); o.addProperty("name", f.getName());
                 o.addProperty("signature", f.getSignature().toString());
@@ -125,6 +128,11 @@ public class ExportWeb extends GhidraScript {
                 functions.add(o);
             }
         } finally { decompiler.dispose(); }
+        if (getScriptArgs().length > 1) {
+            if (functions.size() != 1) throw new Exception("Function not found");
+            Files.writeString(Path.of(getScriptArgs()[0]), new Gson().toJson(functions.get(0)), StandardCharsets.UTF_8);
+            return;
+        }
         root.add("functions", functions);
         root.addProperty("totalFunctions", currentProgram.getFunctionManager().getFunctionCount());
         int internalCount = 0;
