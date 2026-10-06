@@ -91,3 +91,21 @@ h2,.projects,.functions,.bottom,.code-grid .panel:first-child,td,th,footer,.list
 .toolbar-engine .badge{font-size:10px;padding:4px 7px;white-space:nowrap}
 @media(max-width:1250px){.compact-toolbar{grid-template-columns:auto minmax(0,1fr)}.compact-toolbar .filebar{grid-column:1}.compact-toolbar .navigation{grid-column:2;justify-content:flex-end}.toolbar-engine{justify-content:flex-end}}
 @media(max-width:650px){.toolbar-engine{flex-wrap:wrap}.toolbar-engine .engine-config{white-space:normal}.toolbar-engine .engine-config select{max-width:130px}.compact-toolbar .filebar,.compact-toolbar .navigation{grid-column:1/-1;justify-content:flex-start}}
+
+.context-menu{position:fixed;z-index:200;width:300px;max-width:calc(100vw - 8px);max-height:calc(100vh - 8px);overflow:auto;padding:5px;background:#141C2B;border:1px solid #425267;border-radius:6px;box-shadow:0 12px 36px #0009}
+.context-caption{padding:6px 9px;color:#69AFCE;font:12px monospace;border-bottom:1px solid #1E293B}
+.context-menu button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;font-size:12px}
+.context-menu button:hover,.context-menu button:focus-visible{background:#243248}
+.edit-form{display:flex;flex-direction:column;gap:12px;padding:16px;max-width:950px}
+.edit-form label{display:flex;flex-direction:column;gap:5px}.edit-form textarea{min-height:95px}
+
+#details-dialog:has(.edit-form){width:min(680px,94vw);height:auto;max-height:88vh}
+#details-dialog:has(.edit-form) #detail-search{display:none}
+.edit-form{margin:0;padding:22px;gap:16px}
+.edit-form label>span{font-size:12px;color:#91A0B5}
+.edit-form textarea{min-height:120px;resize:vertical;line-height:1.6}
+.edit-form textarea.single-line{min-height:40px;height:40px;resize:none;line-height:1.5}
+.edit-hint{font-size:12px;color:#91A0B5;margin:0!important}
+.edit-feedback{color:#FB7185;margin:0!important;font-size:13px}
+.edit-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;border-top:1px solid #1E293B;padding-top:16px}
+.edit-actions button[type=submit]{background:#244138;border-color:#397B65;color:#B1F1DB}

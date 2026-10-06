@@ -99,22 +99,58 @@ export function renderExplorer(container:HTMLElement,c:ExplorerContext):boolean 
         const value=node('textarea') as HTMLTextAreaElement;value.maxLength=8000;value.placeholder='Nuevo nombre, comentario o firma C según la operación';
         const variable=node('select') as HTMLSelectElement;for(const v of f?.variables||[]){const option=node('option',`${v.name} · ${v.type} · ${v.storage}`) as HTMLOptionElement;option.value=v.id;variable.append(option);}
         const type=node('input') as HTMLInputElement;type.placeholder=c.project.engine==='internal'?'uint32_t (tipo existente)':'/int (ruta del panel Tipos)';
-        for(const [text,control] of [['Operación',select],['Dirección virtual',addr],['Nuevo valor',value],['Variable (solo operación de variable)',variable],['Tipo (variable o definición de datos)',type]] as const){const label=node('label',text);control.setAttribute('aria-label',text);label.append(control);form.append(label);}
+        for(const [text,control] of [['Operación',select],['Dirección virtual',addr],['Nuevo valor',value],['Variable (solo operación de variable)',variable],['Tipo (variable o definición de datos)',type]] as const){const label=node('label');label.append(node('span',text));control.setAttribute('aria-label',text);label.append(control);form.append(label);}
         select.onchange=()=>{
             const noAddress=['undo','redo','define-type'].includes(select.value);addr.disabled=noAddress;
             type.disabled=!['variable','define-data'].includes(select.value);variable.disabled=select.value!=='variable';
             value.disabled=['undo','redo','create-function','delete-function','clear-data','define-data'].includes(select.value);
             if(['signature','variable','function-comment'].includes(select.value))addr.value=f?.address||'';value.value=select.value==='signature'?f?.decompiledSignature||f?.signature||'':select.value==='function-comment'?f?.comment||'':select.value==='define-type'?JSON.stringify({name:'Pair',ty:{Struct:{size:8,fields:[{name:'x',ty:'uint32_t',offset:0},{name:'y',ty:'uint32_t',offset:4}]} }},null,2):select.value==='jump-table'?JSON.stringify({base:'400100',count:2,index:'rax'},null,2):'';};
-        const submit=node('button','Aplicar y actualizar pseudocódigo') as HTMLButtonElement;form.append(submit);
+        const submit=node('button','Guardar cambios') as HTMLButtonElement;submit.type='submit';
+        const hint=node('p');hint.className='edit-hint';
+        const feedback=node('p');feedback.className='edit-feedback';feedback.setAttribute('role','alert');feedback.hidden=true;
+        const cancel=node('button','Cancelar') as HTMLButtonElement;cancel.type='button';cancel.onclick=()=>form.closest('dialog')?.close();
+        const remove=node('button','Vaciar comentario') as HTMLButtonElement;remove.type='button';remove.onclick=()=>{value.value='';value.focus();hint.textContent='Pulsa Guardar comentario para eliminar el comentario existente.';};
+        const actions=node('div');actions.className='edit-actions';actions.append(cancel,remove,submit);form.append(hint,feedback,actions);
+        const configure=()=>{
+            const op=select.value,comment=['comment','function-comment'].includes(op);
+            for(const field of [addr,value,variable,type])field.closest('label')!.hidden=field.disabled;
+            addr.closest('label')!.querySelector('span')!.textContent='Dirección del cambio';
+            variable.closest('label')!.querySelector('span')!.textContent='Variable';
+            type.closest('label')!.querySelector('span')!.textContent='Tipo de datos';
+            const label=comment?'Comentario':op==='rename'?'Nuevo nombre':op==='signature'?'Firma de la función':op==='variable'?'Nuevo nombre (opcional)':op==='bookmark'?'Descripción del marcador':'Contenido';
+            value.closest('label')!.querySelector('span')!.textContent=label;value.setAttribute('aria-label',label);
+            value.rows=['rename','variable'].includes(op)?1:5;
+            value.classList.toggle('single-line',['rename','variable'].includes(op));
+            value.required=['rename','signature','bookmark'].includes(op);
+            value.placeholder=comment?'Escribe aquí tu comentario…':op==='rename'?'Ejemplo: validar_entrada':op==='signature'?'int validar_entrada(char *entrada)':'';
+            remove.hidden=!comment;
+            submit.textContent=comment?'Guardar comentario':op==='rename'?'Guardar nombre':op==='bookmark'?'Guardar marcador':'Guardar cambios';
+            hint.textContent=comment?'El comentario se guarda en el programa. Deja el campo vacío para eliminarlo.':op==='rename'?'El nombre se actualizará en el análisis del programa.':'Los cambios se guardan en el proyecto y actualizan el análisis.';
+            feedback.hidden=true;
+        };
+        const previousChange=select.onchange!;
+        select.onchange=event=>{
+            previousChange.call(select,event);
+            if(select.value==='rename')value.value=a.symbols?.find(s=>sameAddress(s.address,addr.value))?.name||(sameAddress(addr.value,f?.address||'')?f?.name||'':'');
+            if(select.value==='comment')value.value=[...document.querySelectorAll<HTMLElement>('[data-listing-address]')].find(r=>sameAddress(r.dataset.listingAddress||'',addr.value))?.dataset.comment||f?.instructions.find(i=>sameAddress(i.address,addr.value))?.comment||'';
+            configure();
+        };
+        form.addEventListener('edit-context-ready',configure);
+        select.dispatchEvent(new Event('change'));
+        if(select.value==='rename')value.value=a.symbols?.find(s=>sameAddress(s.address,addr.value))?.name||(sameAddress(addr.value,f?.address||'')?f?.name||'':'');
+
         form.onsubmit=e=>{e.preventDefault();
             let command:Record<string,unknown>={operation:select.value,address:addr.value.replace(/^0x/i,''),value:value.value,variableId:variable.value,dataType:type.value};
             try {
                 if(select.value==='define-data')command.ty=type.value;
                 if(select.value==='define-type'||select.value==='jump-table'){const fields=JSON.parse(value.value);command={...command,...fields,operation:select.value};}
-            }catch{c.message('JSON inválido en Nuevo valor.',true);return;}
-            submit.disabled=true;void c.edit(command).catch(e=>c.message(e.message,true)).finally(()=>submit.disabled=false);
+            }catch{feedback.textContent='El contenido JSON no es válido. Revísalo antes de guardar.';feedback.hidden=false;return;}
+            if(select.value==='rename'&&(!value.value.trim()||/[\r\n]/.test(value.value))){feedback.textContent='Escribe un nombre en una sola línea.';feedback.hidden=false;value.focus();return;}
+            if(select.value==='rename')command.value=value.value.trim();
+            submit.disabled=true;remove.disabled=true;submit.textContent='Guardando…';
+            void c.edit(command).catch(e=>{feedback.textContent=e.message;feedback.hidden=false;}).finally(()=>{submit.disabled=false;remove.disabled=false;submit.textContent=['comment','function-comment'].includes(select.value)?'Guardar comentario':select.value==='rename'?'Guardar nombre':'Guardar cambios';});
         };
-        container.append(node('p','Cambios reales del programa. Se conservan al reabrir y regenerar el proyecto.'),form);return true;
+        container.append(form);return true;
     }
     return false;
 }

@@ -46,7 +46,7 @@ export class ListingView {
         if(!this.data?.rows.length){const empty=document.createElement('p');empty.textContent='Ghidra no ha definido instrucciones en este programa.';this.container.append(empty);return;}
         for(const row of this.data.rows){
             if(row.functionAddress!==priorFunction){const header=document.createElement('div');header.className='listing-function';header.textContent=row.function?`${row.function} · ${row.functionAddress}`:'Código fuera de funciones';this.container.append(header);priorFunction=row.functionAddress;}
-            const line=document.createElement('div');line.className='listing-row';line.dataset.listingAddress=row.address;line.dataset.address=row.address;line.setAttribute('role','option');line.setAttribute('aria-selected','false');
+            const line=document.createElement('div');line.className='listing-row';line.dataset.listingAddress=row.address;line.dataset.address=row.address;line.dataset.functionAddress=row.functionAddress||'';line.dataset.comment=row.comment||'';line.setAttribute('role','option');line.setAttribute('aria-selected','false');
             for(const [value,cls]of [[row.space+':'+row.address,'address'],[row.bytes,'bytes']]as const){const span=document.createElement('span');span.className=cls;span.textContent=value;line.append(span);}
             const assembly=document.createElement('span');assembly.className='assembly';
             const parts=row.text.match(/^(\S+)\s*(.*)$/s);

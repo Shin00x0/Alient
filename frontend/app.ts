@@ -11,6 +11,7 @@ let disposeCfgGraph: (() => void) | undefined;
 let detailsVersion = 0;
 const detailsDialog = $<HTMLDialogElement>('details-dialog');
 function openDetails() {
+    $<HTMLInputElement>('detail-search').disabled = false;
     if (!detailsDialog.open) detailsDialog.showModal();
     syncTabs();
 }
@@ -362,4 +363,91 @@ document.querySelectorAll<HTMLButtonElement>('[data-code-view]').forEach(button 
             item.setAttribute('aria-pressed', String(item === button));
         });
     };
+});
+
+// Context actions delegate mutations to the existing capability-checked edit workflow.
+const contextMenu = el('div', undefined, 'context-menu');
+contextMenu.hidden = true; contextMenu.setAttribute('role', 'menu');
+document.body.append(contextMenu);
+function hideContextMenu() { contextMenu.hidden = true; }
+document.addEventListener('pointerdown', e => { if(!contextMenu.contains(e.target as Node))hideContextMenu(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'&&!contextMenu.hidden){e.preventDefault();hideContextMenu();} });
+window.addEventListener('resize', hideContextMenu);
+for (const host of [$('listing'), $('code')]) host.addEventListener('contextmenu', event => {
+    const target = event.target as HTMLElement;
+    const row = target.closest<HTMLElement>('[data-listing-address]');
+    const location = target.closest<HTMLElement>('[data-address]');
+    const address = row?.dataset.listingAddress || location?.dataset.address || cursor;
+    if (!analysis || !address) return;
+    event.preventDefault();
+    const functionAddress = row ? row.dataset.functionAddress : selected?.address;
+    const fn = analysis.functions.find(f=>f.address===functionAddress);
+    const selection = window.getSelection()?.toString().trim() || '';
+    const token = selection || target.textContent?.trim() || '';
+    contextMenu.replaceChildren(el('div', address, 'context-caption'));
+    function action(label:string, run:()=>void|Promise<void>, enabled=true, reason='') {
+        const button=el('button',label) as HTMLButtonElement;
+        button.type='button';button.setAttribute('role','menuitem');button.disabled=!enabled;button.title=reason;
+        button.onclick=()=>{hideContextMenu();Promise.resolve().then(run).catch(e=>notice(String(e),true));};contextMenu.append(button);
+    }
+    action('Copiar dirección',()=>navigator.clipboard.writeText(address));
+    action('Copiar selección / instrucción',()=>navigator.clipboard.writeText(token));
+    action('Referencias cruzadas',()=>showReferences(address));
+    action('Ir al listing',()=>{document.querySelector<HTMLButtonElement>('[data-code-view="listing"]')!.click();navigate(address);});
+    action('Grafo de la función',async()=>{
+        if(fn)selectFunction(fn,false);
+        else if(functionAddress){listingFunctionAddress=functionAddress;await loadListingFunction(functionAddress);}
+        tab='flow';openDetails();await renderDetails();
+    },!!functionAddress);
+    const numeric = token.match(/^(?:-?(?:0x[\da-f]+|0b[01]+|0o[0-7]+|\d+)|[\da-f]+h)$/i)?.[0];
+    action('Conversiones numéricas…',()=>{
+        if(!numeric)return;
+        let n:bigint;
+        if(/h$/i.test(numeric))n=BigInt('0x'+numeric.slice(0,-1));
+        else if(numeric.startsWith('-'))n=-BigInt(numeric.slice(1));else n=BigInt(numeric);
+        openDetails();disposeCfgGraph?.();disposeCfgGraph=undefined;detailsVersion++;
+        $('details-title').textContent='Conversiones · '+numeric;
+        $<HTMLInputElement>('detail-search').disabled=true;
+        const values:[string,string][]=[['Decimal',n.toString()],['Hexadecimal',(n<0n?'-':'')+'0x'+(n<0n?-n:n).toString(16)],['Binario',(n<0n?'-':'')+'0b'+(n<0n?-n:n).toString(2)],['Octal',(n<0n?'-':'')+'0o'+(n<0n?-n:n).toString(8)]];
+        for(const bits of [8,16,32,64]){values.push([`Sin signo (${bits} bits)`,BigInt.asUintN(bits,n).toString()],[`Con signo (${bits} bits)`,BigInt.asIntN(bits,n).toString()]);}
+        values.push(['ASCII',n>=32n&&n<=126n?String.fromCharCode(Number(n)):'No es un carácter ASCII imprimible']);
+        $('details').replaceChildren(el('p','Representaciones del valor. Las conversiones con ancho fijo usan los bits inferiores; no modifican el ejecutable.'),table(['Formato','Valor',''],values.map(([label,value])=>{const copy=el('button','Copiar');copy.onclick=()=>{void navigator.clipboard.writeText(value).catch(e=>notice(String(e),true));};return [label,value,copy];})));
+    },!!numeric,'Selecciona un número completo: decimal, 0x hexadecimal, 0b binario, 0o octal o sufijo h.');
+    const labels:Record<string,string>={rename:'Renombrar función / símbolo…',comment:'Editar / eliminar comentario…','function-comment':'Comentario de función…',signature:'Editar firma de función…',variable:'Renombrar / cambiar tipo de variable…',bookmark:'Añadir marcador…'};
+    for(const [operation,label] of Object.entries(labels)){
+        if(!capabilities?.editOperations.includes(operation))continue;
+        const needsFunction=['function-comment','signature','variable'].includes(operation);
+        const enabled=!!capabilities.actions.edit.enabled&&!!project?.persistent&&(!needsFunction||!!functionAddress);
+        action(label,async()=>{
+            if(functionAddress&&!fn){listingFunctionAddress=functionAddress;await loadListingFunction(functionAddress);}
+            else if(fn)selected=fn;
+            tab='edit';openDetails();await renderDetails();
+            const form=$('details').querySelector<HTMLFormElement>('.edit-form');if(!form)return;
+            const operationSelect=form.querySelector<HTMLSelectElement>('select')!;
+            operationSelect.value=operation;operationSelect.dispatchEvent(new Event('change'));
+            const inputs=form.querySelectorAll<HTMLInputElement>('input');inputs[0].value=needsFunction?functionAddress!:address;
+            const value=form.querySelector<HTMLTextAreaElement>('textarea')!;
+            if(operation==='comment')value.value=row?.dataset.comment||fn?.instructions.find(i=>i.address===address)?.comment||'';
+            if(operation==='rename')value.value=fn?.address===address?fn.name:'';
+            if(operation==='variable'){
+                const variable=form.querySelectorAll<HTMLSelectElement>('select')[1];
+                const match=(selected?.variables||[]).find(v=>v.name===token);if(match){variable.value=match.id;value.value=match.name;}
+            }
+            form.dispatchEvent(new Event('edit-context-ready'));
+            $('details-title').textContent=operation==='rename'?'Renombrar':operation==='comment'?'Comentario de instrucción':operation==='function-comment'?'Comentario de función':label.replace('…','');
+            value.focus();
+            if(operation==='rename')value.select();
+        },enabled,capabilities.actions.edit.reason||(!project?.persistent?'Requiere un proyecto persistente de Ghidra.':'Selecciona una función.'));
+    }
+    contextMenu.hidden=false;contextMenu.style.left='0px';contextMenu.style.top='0px';
+    contextMenu.style.left=Math.max(4,Math.min(event.clientX,innerWidth-contextMenu.offsetWidth-4))+'px';
+    contextMenu.style.top=Math.max(4,Math.min(event.clientY,innerHeight-contextMenu.offsetHeight-4))+'px';
+    contextMenu.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+});
+contextMenu.addEventListener('keydown',event=>{
+    const buttons=[...contextMenu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+    if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        event.preventDefault();const index=buttons.indexOf(document.activeElement as HTMLButtonElement);
+        buttons[(index+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();
+    }
 });
